@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('分类管理')}"></head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/admin}">博客后台</a>
+        <div class="navbar-nav">
+            <a class="nav-link active" th:href="@{/admin/category}">分类管理</a>
+            <a class="nav-link" th:href="@{/admin/tag}">标签管理</a>
+            <a class="nav-link" th:href="@{/admin/article}">文章管理</a>
+            <a class="nav-link" th:href="@{/}">前台</a>
+        </div>
+        <form th:action="@{/logout}" method="post" class="ms-auto">
+            <button type="submit" class="btn btn-sm btn-outline-light">退出</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <h4 class="mb-3">分类管理</h4>
+
+    <div th:if="${error}" class="alert alert-warning py-2" th:text="${error}"></div>
+
+    <form th:action="@{/admin/category/save}" method="post" class="row g-2 align-items-end mb-4">
+        <input type="hidden" name="id" id="cat-id">
+        <div class="col-md-5">
+            <label class="form-label small">分类名</label>
+            <input type="text" class="form-control" name="name" id="cat-name" maxlength="50" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">排序（越小越靠前）</label>
+            <input type="number" class="form-control" name="sort" id="cat-sort" value="0">
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-primary" type="submit">保存</button>
+            <button class="btn btn-link" type="button" id="cat-reset">重置</button>
+        </div>
+    </form>
+
+    <table class="table table-hover align-middle">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>名称</th>
+            <th>排序</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(categories)}">
+            <td colspan="4" class="text-center text-muted">暂无分类</td>
+        </tr>
+        <tr th:each="c : ${categories}">
+            <td th:text="${c.id}"></td>
+            <td th:text="${c.name}"></td>
+            <td th:text="${c.sort}"></td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary"
+                        th:attr="data-id=${c.id},data-name=${c.name},data-sort=${c.sort}"
+                        onclick="editCategory(this)">编辑
+                </button>
+                <form th:action="@{'/admin/category/' + ${c.id} + '/delete'}" method="post" class="d-inline"
+                      onsubmit="return confirm('删除后该分类下的文章会变为未分类，确定删除？');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">删除</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function editCategory(btn) {
+        document.getElementById('cat-id').value = btn.getAttribute('data-id');
+        document.getElementById('cat-name').value = btn.getAttribute('data-name');
+        document.getElementById('cat-sort').value = btn.getAttribute('data-sort');
+        document.getElementById('cat-name').focus();
+    }
+
+    document.getElementById('cat-reset').addEventListener('click', function () {
+        document.getElementById('cat-id').value = '';
+        document.getElementById('cat-name').value = '';
+        document.getElementById('cat-sort').value = '0';
+    });
+</script>
+</body>
+</html>

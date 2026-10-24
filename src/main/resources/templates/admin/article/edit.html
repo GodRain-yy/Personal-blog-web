@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('写文章')}"></head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/admin}">博客后台</a>
+        <div class="navbar-nav">
+            <a class="nav-link active" th:href="@{/admin/article}">文章管理</a>
+            <a class="nav-link" th:href="@{/admin}">概览</a>
+            <a class="nav-link" th:href="@{/}">前台</a>
+        </div>
+        <form th:action="@{/logout}" method="post" class="ms-auto">
+            <button type="submit" class="btn btn-sm btn-outline-light">退出</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <h4 class="mb-4" th:text="${form.id != null} ? '编辑文章' : '写文章'"></h4>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- th:action 自动注入 CSRF token -->
+    <form th:action="@{/admin/article/save}" th:object="${form}" method="post">
+        <input type="hidden" th:field="*{id}">
+
+        <div class="mb-3">
+            <label class="form-label">标题</label>
+            <input type="text" th:field="*{title}" class="form-control" required autofocus maxlength="200">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">摘要（留空则自动截取正文前 120 字）</label>
+            <textarea th:field="*{summary}" class="form-control" rows="2" maxlength="500"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">正文（Markdown）</label>
+            <!-- Vditor 容器；加载成功后再隐藏下方的 textarea -->
+            <div id="editor"></div>
+            <!-- 始终保留 textarea 承载真实提交值：CDN 不可用时自动降级为纯文本编辑 -->
+            <textarea th:field="*{content}" class="form-control" rows="18"
+                      placeholder="支持 Markdown 与 GFM 表格；内嵌的脚本会被安全过滤"></textarea>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">分类</label>
+                <select th:field="*{categoryId}" class="form-select">
+                    <option value="">未分类</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">封面图 URL（选填）</label>
+                <input type="text" th:field="*{cover}" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">状态</label>
+                <select th:field="*{status}" class="form-select">
+                    <option value="0">草稿</option>
+                    <option value="1">发布</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">标签（中文或英文逗号分隔）</label>
+            <input type="text" name="tagNames" class="form-control"
+                   th:value="${form.tagNames != null} ? ${#strings.listJoin(form.tagNames, ',')} : ''">
+            <div class="form-text">标签不存在时会自动创建</div>
+        </div>
+
+        <div class="form-check form-check-inline mb-3">
+            <input class="form-check-input" type="checkbox" th:field="*{isTop}" value="1">
+            <label class="form-check-label">置顶</label>
+        </div>
+        <div class="form-check form-check-inline mb-3">
+            <input class="form-check-input" type="checkbox" th:field="*{isOriginal}" value="1">
+            <label class="form-check-label">原创</label>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <a th:href="@{/admin/article}" class="btn btn-outline-secondary ms-2">返回</a>
+        </div>
+    </form>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.10.6/dist/index.css">
+<script src="https://cdn.jsdelivr.net/npm/vditor@3.10.6/dist/index.min.js"></script>
+<script>
+    // textarea 由 th:field 生成，id/name 均为 content，始终作为真实提交值
+    var textarea = document.getElementById('content');
+
+    if (typeof Vditor !== 'undefined') {
+        var csrfInput = document.querySelector('input[name="_csrf"]');
+        var headers = csrfInput ? {'X-CSRF-TOKEN': csrfInput.value} : {};
+
+        var vditor = new Vditor('editor', {
+            height: 560,
+            mode: 'ir',
+            cache: {enable: false},
+            placeholder: '支持 Markdown 与 GFM 表格',
+            upload: {
+                url: '/api/admin/upload/image',
+                fieldName: 'file',
+                max: 5 * 1024 * 1024,
+                multiple: false,
+                headers: headers,
+                format: function (files, responseText) {
+                    var res = JSON.parse(responseText);
+                    return JSON.stringify({
+                        code: res.code,
+                        msg: res.msg,
+                        data: {errFiles: res.data.errFiles, succMap: res.data.succMap}
+                    });
+                }
+            },
+            after: function () {
+                vditor.setValue(textarea.value || '');
+                textarea.style.display = 'none';
+            },
+            input: function () {
+                textarea.value = vditor.getValue();
+            }
+        });
+
+        // 提交前再同步一次，避免某些情况下 input 事件未触发
+        document.querySelector('form').addEventListener('submit', function () {
+            textarea.value = vditor.getValue();
+        });
+    }
+</script>
+</body>
+</html>

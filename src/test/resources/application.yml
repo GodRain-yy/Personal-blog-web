@@ -1,0 +1,13 @@
+# 测试环境覆盖配置
+spring:
+  profiles:
+    active: dev
+
+# 关闭后台定时任务，避免干扰浏览量相关断言
+blog:
+  scheduler:
+    enabled: false
+
+logging:
+  level:
+    com.example.blog: warn

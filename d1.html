@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XSS 过滤验证示例文章 - 我的博客</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">我的博客</a>
+        <div class="navbar-nav">
+            <a class="nav-link" href="/">首页</a>
+            <a class="nav-link" href="/archives">归档</a>
+            <a class="nav-link" href="/admin">后台</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <article class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-3">XSS 过滤验证示例文章</h1>
+                    <p class="text-muted small">
+                        <span>2026-09-12 09:45</span>
+                        <span> · 技术笔记</span>
+                        <span> · 8 次浏览</span>
+                    </p>
+
+                    <div class="mb-3">
+                        <span class="badge bg-secondary me-1">Java</span><span class="badge bg-secondary me-1">SpringBoot</span>
+                    </div>
+
+                    <hr>
+
+                    <!-- contentHtml 已在服务端渲染时过 OWASP 白名单，可安全 utext 输出 -->
+                    <div class="article-content"><h1>这是一篇用于验证的文章</h1>
+
+<p>下面是正常正文段落。</p>
+<pre><code class="language-java">System.out.println(&#34;hello&#34;);
+</code></pre>
+<table><thead><tr><th>列1</th><th>列2</th></tr></thead><tbody><tr><td>A</td><td>B</td></tr></tbody></table>
+</div>
+                </div>
+            </article>
+
+            <a href="/" class="btn btn-outline-secondary btn-sm mt-3">返回列表</a>
+
+            <!-- 评论区 -->
+            <div class="card mt-4" id="comments">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        评论 <span class="text-muted small">(0)</span>
+                    </h5>
+
+                    
+
+                    
+                    <div class="alert alert-light border mb-4">
+                        <a href="/login">登录</a> 后可以发表评论。
+                    </div>
+
+                    <div class="text-muted small">还没有评论，来抢沙发。</div>
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 回复框展开/收起，纯前端交互，不依赖任何框架
+    document.querySelectorAll('.reply-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var wrap = btn.closest('.flex-grow-1');
+            var form = wrap.querySelector('.reply-form');
+            if (!form) return;
+            var open = !form.classList.contains('d-none');
+            document.querySelectorAll('.reply-form').forEach(function (f) { f.classList.add('d-none'); });
+            form.classList.toggle('d-none', open);
+            if (!open) form.querySelector('textarea').focus();
+        });
+    });
+    document.querySelectorAll('.cancel-reply').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            btn.closest('.reply-form').classList.add('d-none');
+        });
+    });
+</script>
+
+<footer class="border-top py-4 mt-5 text-muted">
+    <div class="container small">基于 Spring Boot 4 + Thymeleaf 构建</div>
+</footer>
+</body>
+</html>

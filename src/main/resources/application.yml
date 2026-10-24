@@ -1,0 +1,43 @@
+server:
+  port: 8080
+  error:
+    whitelabel:
+      enabled: false
+    include-message: always
+
+spring:
+  profiles:
+    active: dev
+  thymeleaf:
+    cache: false          # 开发期关闭，生产改 true
+    mode: HTML
+    encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+  jackson:
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto       # 主键自增
+      logic-delete-field: ~   # 不使用 MP 逻辑删除，软删除由 status 字段自控
+
+blog:
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}    # 图片存放目录，由 WebMvcConfig 映射为 /uploads/**
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.example.blog: debug

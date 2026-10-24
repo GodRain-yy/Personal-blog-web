@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('热门文章')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h4 class="mb-4">🔥 热门文章</h4>
+
+            <div th:if="${#lists.isEmpty(hotList)}" class="text-muted">还没有热度数据，去
+                <a th:href="@{/}">首页</a>逛逛吧。
+            </div>
+
+            <div th:each="h, iter : ${hotList}" class="card mb-3">
+                <div class="card-body d-flex align-items-center">
+                    <div class="me-3 fs-3 fw-bold text-danger" th:text="${iter.index + 1}"></div>
+                    <div class="flex-grow-1">
+                        <a th:href="@{'/articles/' + ${h.id}}" class="text-decoration-none">
+                            <h6 class="mb-1" th:text="${h.title}"></h6>
+                        </a>
+                        <p class="text-muted small mb-1 text-truncate" th:text="${h.summary}"></p>
+                        <small class="text-muted">
+                            <span th:text="${h.viewCount} + ' 浏览'"></span> ·
+                            <span th:text="${h.likeCount} + ' 点赞'"></span> ·
+                            <span th:text="${h.commentCount} + ' 评论'"></span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <a th:href="@{/}" class="btn btn-outline-secondary btn-sm mt-2">返回首页</a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

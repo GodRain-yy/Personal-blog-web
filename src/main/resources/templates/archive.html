@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('归档')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h3 class="mb-4">文章归档</h3>
+
+            <div th:if="${#lists.isEmpty(groups)}" class="alert alert-info">还没有已发布的文章。</div>
+
+            <section th:each="g : ${groups}" class="mb-4">
+                <h5 class="text-muted border-bottom pb-2" th:text="${g.yearMonth}"></h5>
+                <ul class="list-unstyled">
+                    <li th:each="item : ${g.articles}" class="py-1">
+                        <a class="text-decoration-none" th:href="@{'/articles/' + ${item.id}}"
+                           th:text="${item.title}"></a>
+                        <span class="text-muted small ms-2"
+                              th:if="${item.publishTime != null}"
+                              th:text="${#temporals.format(item.publishTime, 'MM-dd')}"></span>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

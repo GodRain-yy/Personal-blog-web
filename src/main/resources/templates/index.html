@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('首页')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-lg-8">
+
+            <form class="input-group mb-4" th:action="@{/search}" method="get">
+                <input type="text" class="form-control" name="keyword"
+                       th:value="${query.keyword}" placeholder="搜索标题或摘要">
+                <button class="btn btn-outline-secondary" type="submit">搜索</button>
+            </form>
+
+            <div th:if="${query.keyword != null and !query.keyword.isEmpty()}" class="mb-3 small text-muted">
+                「<span th:text="${query.keyword}"></span>」的搜索结果：共
+                <span th:text="${pageResult.total}"></span> 条
+                <a th:href="@{/}" class="ms-2">清除</a>
+            </div>
+
+            <div th:if="${pageResult.total == 0}" class="alert alert-info">
+                <span th:if="${query.keyword != null and !query.keyword.isEmpty()}">没有匹配的文章，换个关键词试试。</span>
+                <span th:unless="${query.keyword != null and !query.keyword.isEmpty()}">
+                    还没有已发布的文章，去<a th:href="@{/admin/article/edit}">后台写一篇</a>吧。
+                </span>
+            </div>
+
+            <article th:each="a : ${pageResult.records}" class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a class="text-decoration-none" th:href="@{'/articles/' + ${a.id}}" th:text="${a.title}"></a>
+                    </h5>
+                    <p class="card-text text-muted small">
+                        <span th:if="${a.publishTime != null}"
+                              th:text="${#temporals.format(a.publishTime, 'yyyy-MM-dd HH:mm')}"></span>
+                        <span th:if="${a.categoryName != null}" th:text="' · ' + ${a.categoryName}"></span>
+                        <span th:text="' · ' + ${a.viewCount} + ' 次浏览'"></span>
+                    </p>
+                    <p class="card-text" th:text="${a.summary}"></p>
+                    <span th:each="t : ${#strings.arraySplit(a.tagNames, ',')}"
+                          th:unless="${a.tagNames == null or a.tagNames.isEmpty()}"
+                          class="badge bg-secondary me-1" th:text="${t}"></span>
+                </div>
+            </article>
+
+            <nav th:if="${pageResult.pages > 1}">
+                <ul class="pagination">
+                    <li class="page-item" th:classappend="${pageResult.page le 1} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/search(page=${pageResult.page - 1}, keyword=${query.keyword}, categoryId=${query.categoryId}, tagId=${query.tagId})}">上一页</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"
+                              th:text="'第 ' + ${pageResult.page} + ' / ' + ${pageResult.pages} + ' 页'"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${pageResult.page ge pageResult.pages} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/search(page=${pageResult.page + 1}, keyword=${query.keyword}, categoryId=${query.categoryId}, tagId=${query.tagId})}">下一页</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-3">分类</h6>
+                    <div th:if="${#lists.isEmpty(categories)}" class="text-muted small">暂无分类</div>
+                    <a th:each="c : ${categories}" class="d-inline-block badge bg-light text-dark me-2 mb-2"
+                       th:href="@{/search(categoryId=${c.id})}" th:text="${c.name}"></a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-3">标签</h6>
+                    <div th:if="${#lists.isEmpty(tags)}" class="text-muted small">暂无标签</div>
+                    <a th:each="t : ${tags}" class="d-inline-block badge bg-light text-dark me-2 mb-2"
+                       th:href="@{/search(tagId=${t.id})}" th:text="${t.name}"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

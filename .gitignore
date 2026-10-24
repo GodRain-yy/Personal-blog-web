@@ -1,0 +1,24 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### IDE ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### 含密钥/本地配置，禁止提交 ###
+application-dev.yml
+application-prod.yml
+*.local.yml
+.env
+
+### 运行时产物 ###
+uploads/
+logs/
+*.log
+
+### 本地调试残留 ###
+cookies.txt
+cj.txt

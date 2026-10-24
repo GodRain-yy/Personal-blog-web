@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.blog.mapper.CommentMapper">
+
+    <!-- comment 是 SQL 关键字，表名一律用反引号包裹 -->
+    <select id="selectByArticleId" resultType="com.example.blog.vo.CommentVO">
+        SELECT c.id,
+               c.article_id,
+               c.user_id,
+               c.parent_id,
+               c.reply_to_id,
+               c.content,
+               c.create_time,
+               u.nickname  AS author_name,
+               u.avatar    AS author_avatar,
+               ru.nickname AS reply_to_name
+        FROM `comment` c
+                 LEFT JOIN blog_user u ON u.id = c.user_id
+        -- reply_to_id 指向的是被回复的评论，需再回表取其作者昵称
+                 LEFT JOIN `comment` rc ON rc.id = c.reply_to_id
+                 LEFT JOIN blog_user ru ON ru.id = rc.user_id
+        WHERE c.article_id = #{articleId}
+          AND c.status = 1
+        ORDER BY c.create_time ASC
+    </select>
+
+    <select id="countByArticleId" resultType="int">
+        SELECT COUNT(1) FROM `comment` WHERE article_id = #{articleId} AND status = 1
+    </select>
+
+</mapper>

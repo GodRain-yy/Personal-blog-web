@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('标签管理')}"></head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/admin}">博客后台</a>
+        <div class="navbar-nav">
+            <a class="nav-link" th:href="@{/admin/category}">分类管理</a>
+            <a class="nav-link active" th:href="@{/admin/tag}">标签管理</a>
+            <a class="nav-link" th:href="@{/admin/article}">文章管理</a>
+            <a class="nav-link" th:href="@{/}">前台</a>
+        </div>
+        <form th:action="@{/logout}" method="post" class="ms-auto">
+            <button type="submit" class="btn btn-sm btn-outline-light">退出</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <h4 class="mb-3">标签管理</h4>
+
+    <div th:if="${error}" class="alert alert-warning py-2" th:text="${error}"></div>
+
+    <form th:action="@{/admin/tag/save}" method="post" class="row g-2 align-items-end mb-4">
+        <input type="hidden" name="id" id="tag-id">
+        <div class="col-md-6">
+            <label class="form-label small">标签名</label>
+            <input type="text" class="form-control" name="name" id="tag-name" maxlength="50" required>
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-primary" type="submit">保存</button>
+            <button class="btn btn-link" type="button" id="tag-reset">重置</button>
+        </div>
+    </form>
+
+    <table class="table table-hover align-middle">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>名称</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(tags)}">
+            <td colspan="3" class="text-center text-muted">暂无标签</td>
+        </tr>
+        <tr th:each="t : ${tags}">
+            <td th:text="${t.id}"></td>
+            <td th:text="${t.name}"></td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary"
+                        th:attr="data-id=${t.id},data-name=${t.name}"
+                        onclick="editTag(this)">编辑
+                </button>
+                <form th:action="@{'/admin/tag/' + ${t.id} + '/delete'}" method="post" class="d-inline"
+                      onsubmit="return confirm('删除后文章上的该标签关联也会清除，确定删除？');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">删除</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function editTag(btn) {
+        document.getElementById('tag-id').value = btn.getAttribute('data-id');
+        document.getElementById('tag-name').value = btn.getAttribute('data-name');
+        document.getElementById('tag-name').focus();
+    }
+
+    document.getElementById('tag-reset').addEventListener('click', function () {
+        document.getElementById('tag-id').value = '';
+        document.getElementById('tag-name').value = '';
+    });
+</script>
+</body>
+</html>

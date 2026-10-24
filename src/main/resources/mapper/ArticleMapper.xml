@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.blog.mapper.ArticleMapper">
+
+    <sql id="listColumns">
+        a.id, a.title, a.summary, a.cover, a.publish_time, a.view_count, a.comment_count, a.word_count, a.like_count,
+        c.name AS category_name,
+        u.nickname AS author_name,
+        (SELECT GROUP_CONCAT(t.name SEPARATOR ',')
+           FROM article_tag atx
+           INNER JOIN tag t ON t.id = atx.tag_id
+          WHERE atx.article_id = a.id) AS tag_names
+    </sql>
+
+    <sql id="listJoins">
+        FROM article a
+        LEFT JOIN category c ON c.id = a.category_id
+        LEFT JOIN blog_user u ON u.id = a.user_id
+    </sql>
+
+    <select id="selectArticleList" resultType="com.example.blog.vo.ArticleVO">
+        SELECT
+        <include refid="listColumns"/>
+        <include refid="listJoins"/>
+        <where>
+            <if test="q.status != null">AND a.status = #{q.status}</if>
+            <if test="q.keyword != null and q.keyword != ''">
+                <choose>
+                    <!-- 两个字符以上走 ngram 全文索引 ft_title_summary；
+                         单字符无法构成 2-gram，降级为 LIKE 兜底 -->
+                    <when test="q.keyword.length() &gt;= 2">
+                        AND MATCH(a.title, a.summary) AGAINST (#{q.keyword} IN BOOLEAN MODE)
+                    </when>
+                    <otherwise>
+                        AND (a.title LIKE CONCAT('%', #{q.keyword}, '%')
+                          OR a.summary LIKE CONCAT('%', #{q.keyword}, '%'))
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="q.categoryId != null">AND a.category_id = #{q.categoryId}</if>
+            <if test="q.tagId != null">
+                AND EXISTS (SELECT 1 FROM article_tag at2 WHERE at2.article_id = a.id AND at2.tag_id = #{q.tagId})
+            </if>
+            <if test="q.yearMonth != null and q.yearMonth != ''">
+                AND DATE_FORMAT(a.publish_time, '%Y-%m') = #{q.yearMonth}
+            </if>
+        </where>
+        ORDER BY a.is_top DESC, a.publish_time DESC
+    </select>
+
+    <select id="selectDetailById" resultType="com.example.blog.vo.ArticleDetailVO">
+        SELECT
+        <include refid="listColumns"/>,
+        a.content_html
+        <include refid="listJoins"/>
+        WHERE a.id = #{id} AND a.status = 1
+    </select>
+
+    <select id="selectArchiveItems" resultType="com.example.blog.vo.ArchiveItemVO">
+        SELECT a.id, a.title, a.publish_time
+        FROM article a
+        WHERE a.status = 1
+        ORDER BY a.publish_time DESC
+    </select>
+
+    <select id="selectTagIdsByArticleId" resultType="java.lang.Long">
+        SELECT tag_id FROM article_tag WHERE article_id = #{articleId}
+    </select>
+
+    <delete id="deleteTagsByArticleId">
+        DELETE FROM article_tag WHERE article_id = #{articleId}
+    </delete>
+
+    <insert id="insertArticleTags">
+        INSERT INTO article_tag (article_id, tag_id) VALUES
+        <foreach collection="tagIds" item="tagId" separator=",">
+            (#{articleId}, #{tagId})
+        </foreach>
+    </insert>
+
+    <update id="increaseViewCount">
+        UPDATE article SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="addViewCount">
+        UPDATE article SET view_count = view_count + #{delta} WHERE id = #{id}
+    </update>
+
+    <update id="increaseLikeCount">
+        UPDATE article SET like_count = like_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="decreaseLikeCount">
+        UPDATE article SET like_count = GREATEST(like_count - 1, 0) WHERE id = #{id}
+    </update>
+
+    <update id="increaseCommentCount">
+        UPDATE article SET comment_count = comment_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="decreaseCommentCount">
+        UPDATE article SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = #{id}
+    </update>
+
+    <update id="clearCategory">
+        UPDATE article SET category_id = NULL WHERE category_id = #{categoryId}
+    </update>
+
+    <select id="countByCategoryId" resultType="long">
+        SELECT COUNT(1) FROM article WHERE category_id = #{categoryId}
+    </select>
+
+    <delete id="deleteTagsByTagId">
+        DELETE FROM article_tag WHERE tag_id = #{tagId}
+    </delete>
+
+</mapper>
